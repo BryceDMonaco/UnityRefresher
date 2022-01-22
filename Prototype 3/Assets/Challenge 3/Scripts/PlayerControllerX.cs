@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerControllerX : MonoBehaviour
 {
-    public bool gameOver;
+    public bool gameOver = false;
 
     public float floatForce;
     private float gravityModifier = 1.5f;
@@ -17,10 +17,13 @@ public class PlayerControllerX : MonoBehaviour
     public AudioClip moneySound;
     public AudioClip explodeSound;
 
+    private float maxHeight = 16f;
 
     // Start is called before the first frame update
     void Start()
     {
+        playerRb = transform.GetComponent<Rigidbody>();
+        
         Physics.gravity *= gravityModifier;
         playerAudio = GetComponent<AudioSource>();
 
@@ -37,12 +40,19 @@ public class PlayerControllerX : MonoBehaviour
         {
             playerRb.AddForce(Vector3.up * floatForce);
         }
+
+        if (transform.position.y > maxHeight)
+        {
+            playerRb.velocity = Vector3.zero;
+            Vector3 currentPos = transform.position;
+            transform.position = new Vector3(currentPos.x, maxHeight, currentPos.z);
+        }
     }
 
     private void OnCollisionEnter(Collision other)
     {
         // if player collides with bomb, explode and set gameOver to true
-        if (other.gameObject.CompareTag("Bomb"))
+        if (other.gameObject.CompareTag("Bomb") || (other.gameObject.CompareTag("Ground")))
         {
             explosionParticle.Play();
             playerAudio.PlayOneShot(explodeSound, 1.0f);
