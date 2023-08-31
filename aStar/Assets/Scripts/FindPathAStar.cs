@@ -24,21 +24,18 @@ public class PathMarker
 
     public override bool Equals(object obj)
     {
-        if (obj is PathMarker otherMarker)
+        if ((obj == null) || !this.GetType().Equals(obj.GetType()))
         {
-            if (location.Equals(otherMarker.location)
-                && G == otherMarker.G
-                && H == otherMarker.H
-                && F == otherMarker.F
-                && marker.Equals(otherMarker.marker)
-                && parent.Equals(otherMarker.parent))
-            {
-                return true;
-            }
+            return false;
+        } else
+        {
+            return location.Equals(((PathMarker)obj).location);
         }
+    }
 
-        return false;
-        
+    public override int GetHashCode()
+    {
+        return 0;
     }
 }
 
@@ -59,7 +56,7 @@ public class FindPathAStar : MonoBehaviour
     PathMarker startNode;
 
     PathMarker lastPos;
-    bool done = false;
+    public bool done = false;
 
     void RemoveAllMarkers()
     {
@@ -94,7 +91,7 @@ public class FindPathAStar : MonoBehaviour
         startNode = new PathMarker(new MapLocation(locations[0].x, locations[0].z), 0f, 0f, 0f, Instantiate(start, startLocation, Quaternion.identity), null);
 
         Vector3 goalLocation = new Vector3(locations[1].x, 0, locations[1].z) * maze.scale;
-        startNode = new PathMarker(new MapLocation(locations[1].x, locations[1].z), 0f, 0f, 0f, Instantiate(end, goalLocation, Quaternion.identity), null);
+        goalNode = new PathMarker(new MapLocation(locations[1].x, locations[1].z), 0f, 0f, 0f, Instantiate(end, goalLocation, Quaternion.identity), null);
 
         open.Clear();
         closed.Clear();
@@ -196,6 +193,20 @@ public class FindPathAStar : MonoBehaviour
         return false;
     }
 
+    void GetPath()
+    {
+        RemoveAllMarkers();
+        PathMarker begin = lastPos;
+
+        while (!startNode.Equals(begin) && begin != null)
+        {
+            Instantiate(pathP, new Vector3(begin.location.x, 0, begin.location.z) * maze.scale, Quaternion.identity);
+            begin = begin.parent;
+        }
+
+        Instantiate(pathP, new Vector3(startNode.location.x, 0, startNode.location.z) * maze.scale, Quaternion.identity);
+    }
+
     void Start()
     {
         
@@ -208,9 +219,14 @@ public class FindPathAStar : MonoBehaviour
             BeginSearch();
         }
 
-        if (Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(KeyCode.C) && !done)
         {
             Search(lastPos);
+        }
+
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            GetPath();
         }
     }
 }
